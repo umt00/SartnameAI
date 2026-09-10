@@ -17,7 +17,8 @@ class TenderRequirement:
     """Şartname metninden çıkarılan teknik gereksinimler."""
 
     def __init__(self):
-        self.storage_tier: str | None = None  # "All-Flash", "Hibrit"
+        self.target_model: str | None = None
+        self.storage_tier: str | None = None  # "All-Flash", "Hibrit", "All-SAN"
         self.min_controllers: int = 2
         self.min_ram_total_gb: int | None = None
         self.min_ram_per_node_gb: int | None = None
@@ -51,57 +52,93 @@ class ScoringEngine:
         req = TenderRequirement()
         text_lower = tender_text.lower()
 
-        # 1. Depolama Ortamı (Tier)
-        if any(t in text_lower for t in ["all-flash", "all flash", "nvme ssd", "yalnızca ssd"]):
-            req.storage_tier = "All-Flash"
-        elif any(t in text_lower for t in ["hibrit", "hybrid", "nl-sas"]):
-            req.storage_tier = "Hibrit"
+        # 0. Hedef / Belirtilen Model Tespiti
+        m_model = re.search(
+            r"\b(FAS\s*2820|FAS\s*70|FAS\s*90|FAS\s*50|FAS\s*2750|AFF\s*A30|AFF\s*A50|AFF\s*A20|AFF\s*C30|AFF\s*C60|AFF\s*C80|EF\s*50|EF\s*80|ASA\s*A30|ASA\s*A50|ASA\s*A20|ASA\s*C30|AFX\s*1K)\b",
+            tender_text,
+            flags=re.IGNORECASE,
+        )
+        if m_model:
+            req.target_model = re.sub(r"\s+", "", m_model.group(1)).upper()
 
-        # 2. Kontrol Ünitesi
-        m_ctrl = re.search(r"(\d+)\s*(?:adet|tane)?\s*kontrol\s*ünite", text_lower)
+        # 1. Depolama Ortamı (Tier) — Önce Hibrit kontrolü (içinde NVMe SSD geçse bile)
+        if "hibrit" in text_lower or "hybrid" in text_lower:
+            req.storage_tier = "Hibrit"
+        elif any(t in text_lower for t in ["all-flash", "all flash", "yalnızca ssd"]):
+            req.storage_tier = "All-Flash"
+        elif any(t in text_lower for t in ["all-san", "yalnızca san"]):
+            req.storage_tier = "All-SAN"
+
+        # 2. Kontrol Ünitesi (Şasi / Temel Sistem - scale-out hariç)
+        m_ctrl = re.search(
+            r"(?:en az|toplam|sahip)\s*(\d+)\s*(?:\([^)]+\)\s*)?(?:adet|tane)?\s*kontrol\s*ünite(?:si|sine)?(?:\s*\(ha pair\))?",
+            text_lower,
+        )
         if m_ctrl:
-            req.min_controllers = int(m_ctrl.group(1))
+            val = int(m_ctrl.group(1))
+            if val <= 4:
+                req.min_controllers = val
+            else:
+                req.min_controllers = 2
         elif "ha pair" in text_lower or "aktif-aktif" in text_lower:
             req.min_controllers = 2
 
-        # 3. Sistem Belleği (RAM)
+        # 3. Sistem Belleği (RAM) — Parantez içi Türkçe okunuşları da destekler
         m_ram_tot = re.search(
-            r"(?:toplam(?:da)?|sistem(?:de)?)[^.]+?(\d+)\s*gb\s*(?:[^\n\.,;]*?)(?:ram|bellek|dram)",
+            r"(?:toplam(?:da|ında)?|sistem(?:de)?)\s*(?:en az)?\s*(\d+)\s*(?:\([^)]+\)\s*)?gb",
             text_lower,
         )
         if m_ram_tot:
             req.min_ram_total_gb = int(m_ram_tot.group(1))
         else:
             m_ram_gen = re.search(
-                r"(\d+)\s*gb\s*(?:[^\n\.,;]*?)(?:ram|bellek|dram)", text_lower
+                r"(\d+)\s*(?:\([^)]+\)\s*)?gb\s*(?:[^\n\.,;]*?)(?:ram|bellek|dram)",
+                text_lower,
             )
             if m_ram_gen:
                 req.min_ram_total_gb = int(m_ram_gen.group(1))
 
         # Kontrol ünitesi başı RAM: "her bir kontrol ünitesi üzerinde en az 64 GB"
         m_ram_node = re.search(
-            r"(?:her bir|düğüm|kontrol ünitesi)\s*[^.]+?(\d+)\s*gb\s*(?:[^\n\.,;]*?)(?:ram|bellek)",
+            r"(?:her bir|düğüm|kontrol ünitesi)\s*[^.]+?(\d+)\s*(?:\([^)]+\)\s*)?gb",
             text_lower,
         )
         if m_ram_node:
             req.min_ram_per_node_gb = int(m_ram_node.group(1))
 
         # 4. NVRAM / NVMEM
-        m_nv = re.search(r"(\d+(?:\.\d+)?)\s*gb\s*(?:nvram|nvmem|kalıcı yazma belleği)", text_lower)
+        m_nv = re.search(
+            r"(\d+(?:\.\d+)?)\s*(?:\([^)]+\)\s*)?gb\s*(?:nvram|nvmem|kalıcı yazma belleği)",
+            text_lower,
+        )
         if m_nv:
             req.min_nvram_total_gb = float(m_nv.group(1))
 
-        # 5. Disk Sürücü Sayısı
-        m_drives = re.search(r"(\d+)\s*(?:adet)?\s*(?:disk|sürücü)", text_lower)
-        if m_drives:
-            req.min_drives = int(m_drives.group(1))
+        # 5. Disk Sürücü Sayısı (Çift yönlü arama: "144 disk" veya "disk ... azami 144")
+        m_d1 = re.findall(
+            r"(?:azami|en az)\s*(\d+)\s*(?:\([^)]+\)\s*)?(?:[^\n\.,;]*?)(?:disk|sürücü)",
+            text_lower,
+        )
+        m_d2 = re.findall(
+            r"(?:disk|sürücü)[^\n\.,;]*?(?:azami|en az)\s*(\d+)",
+            text_lower,
+        )
+        valid_drives = [int(x) for x in m_d1 + m_d2 if 12 <= int(x) <= 2000]
+        if valid_drives:
+            req.min_drives = max(valid_drives)
 
         # 6. Ağ ve Portlar
-        m_ip = re.search(r"(\d+)\s*(?:adet)?\s*(?:ethernet|10g|25g|ip)\s*port", text_lower)
+        m_ip = re.search(
+            r"(\d+)\s*(?:[xX]|\*|\s*(?:adet)?)\s*(?:[^\n\.,;]*?)(?:ethernet|10g|25g|ip)\s*port",
+            text_lower,
+        )
         if m_ip:
             req.min_ip_ports = int(m_ip.group(1))
 
-        m_fc = re.search(r"(\d+)\s*(?:adet)?\s*(?:fc|fibre channel|16g|32g)\s*port", text_lower)
+        m_fc = re.search(
+            r"(\d+)\s*(?:[xX]|\*|\s*(?:adet)?)\s*(?:[^\n\.,;]*?)(?:fc|fibre channel|16g|32g)\s*port",
+            text_lower,
+        )
         if m_fc:
             req.min_fc_ports = int(m_fc.group(1))
 
@@ -111,7 +148,10 @@ class ScoringEngine:
             req.max_rack_units = int(m_u.group(1))
 
         # 8. Çekirdek Sayısı
-        m_cores = re.search(r"(\d+)\s*(?:fiziksel)?\s*çekirdek", text_lower)
+        m_cores = re.search(
+            r"(?:toplam(?:da|ında)?\s*en az)?\s*(\d+)\s*(?:\([^)]+\)\s*)?(?:fiziksel)?\s*çekirdek",
+            text_lower,
+        )
         if m_cores:
             req.min_cores = int(m_cores.group(1))
 
@@ -135,6 +175,24 @@ class ScoringEngine:
 
         scores: dict[str, float] = {}
 
+        # 0. Hedef Model Eşleşmesi Kontrolü
+        is_target_model = False
+        if req.target_model:
+            clean_target = re.sub(r"[^a-zA-Z0-9]", "", req.target_model).lower()
+            clean_spec = re.sub(r"[^a-zA-Z0-9]", "", spec.model_name).lower()
+            if clean_target in clean_spec or clean_spec in clean_target:
+                is_target_model = True
+                details.append(
+                    MatchScoreDetail(
+                        feature="Model Spesifikasyonu",
+                        required_value=req.target_model,
+                        actual_value=spec.model_name,
+                        score=100.0,
+                        tier="TAM_UYUM",
+                        note="Şartnamede doğrudan belirtilen/hedeflenen model.",
+                    )
+                )
+
         # 1. Depolama Mimarisi / Türü
         if req.storage_tier:
             if req.storage_tier.lower() in spec.storage_tier.lower():
@@ -149,14 +207,26 @@ class ScoringEngine:
                         note="Depolama mimarisi şartnameyle tam uyumlu.",
                     )
                 )
-            else:
-                scores["tier_arch"] = 40.0
+            elif req.storage_tier == "All-Flash" and "all-san" in spec.storage_tier.lower():
+                scores["tier_arch"] = 100.0
                 details.append(
                     MatchScoreDetail(
                         feature="Depolama Türü (Tier)",
                         required_value=req.storage_tier,
                         actual_value=spec.storage_tier,
-                        score=40.0,
+                        score=100.0,
+                        tier="TAM_UYUM",
+                        note="All-SAN NVMe All-Flash mimarisi şartnameyi karşılıyor.",
+                    )
+                )
+            else:
+                scores["tier_arch"] = 30.0
+                details.append(
+                    MatchScoreDetail(
+                        feature="Depolama Türü (Tier)",
+                        required_value=req.storage_tier,
+                        actual_value=spec.storage_tier,
+                        score=30.0,
                         tier="ONEMLI_FARK",
                         note=f"İstenen tür '{req.storage_tier}', üründeki tür '{spec.storage_tier}'.",
                     )
@@ -336,6 +406,12 @@ class ScoringEngine:
         scores["processor"] = 100.0
 
         # Ağırlıklı Toplam Puan Hesaplama
-        overall_score = sum(scores[cat] * cls.WEIGHTS[cat] for cat in cls.WEIGHTS)
+        raw_score = sum(scores[cat] * cls.WEIGHTS[cat] for cat in cls.WEIGHTS)
+
+        # Eğer şartnamede doğrudan hedeflenen model bu model ise tam puan ver
+        if is_target_model and raw_score >= 80.0:
+            overall_score = 100.0
+        else:
+            overall_score = raw_score
 
         return round(overall_score, 1), details, absurd_flags

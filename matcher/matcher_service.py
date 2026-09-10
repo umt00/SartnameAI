@@ -96,7 +96,15 @@ class MatcherService:
             )
 
         # 4. Puana göre azalan sırada sırala ve top-N dön
-        results.sort(key=lambda r: r.overall_score, reverse=True)
+        # Puan eşitliğinde doğrudan hedeflenen model ve tam eşleşen kriter sayısı öne geçer
+        results.sort(
+            key=lambda r: (
+                r.overall_score,
+                1 if any(d.feature == "Model Spesifikasyonu" for d in r.details) else 0,
+                r.matched_count,
+            ),
+            reverse=True,
+        )
         return results[: request.top_n]
 
 
