@@ -1,10 +1,40 @@
-# Python-generated files
+# Python
 __pycache__/
-*.py[oc]
+*.py[cod]
+*$py.class
+*.so
 build/
 dist/
 wheels/
-*.egg-info
+*.egg-info/
+.installed.cfg
+*.egg
 
-# Virtual environments
-.venv
+# Virtual Environments
+.venv/
+env/
+venv/
+ENV/
+
+# Testing & Linting
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Environment variables & secrets
+.env
+
+# OS specific
+.DS_Store
+Thumbs.db
+
+# Output directory generated files (keep directory via .gitkeep)
+output/*
+!output/.gitkeep
+
+# Pipeline temporary folders
+pipeline/1_incoming_pdfs/*
+!pipeline/1_incoming_pdfs/.gitkeep
+pipeline/2_processed_pdfs/*
+!pipeline/2_processed_pdfs/.gitkeep

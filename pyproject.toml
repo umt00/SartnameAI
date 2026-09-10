@@ -1,22 +1,30 @@
 [project]
 name = "sartnameai"
 version = "0.1.0"
-description = "Add your description here"
+description = "Kurumsal Teknik Şartname Hazırlama ve Karşılaştırma Asistanı"
 readme = "README.md"
 authors = [
     { name = "Umut Arslan", email = "umtarsln00@icloud.com" }
 ]
 requires-python = ">=3.10"
 dependencies = [
+    "fastmcp>=0.4.0",
+    "httpx>=0.27.0",
     "openpyxl>=3.1.5",
-    "pandas>=2.3.3",
-    "pdfplumber>=0.11.10",
-    "rich>=15.0.0",
+    "pandas>=2.2.0",
+    "pdfplumber>=0.11.0",
+    "pydantic>=2.7.0",
+    "pydantic-settings>=2.2.0",
+    "python-docx>=1.1.0",
+    "rich>=13.0.0",
 ]
 
-[project.scripts]
-sartnameai = "sartnameai:main"
+[dependency-groups]
+dev = [
+    "pytest>=8.0.0",
+    "pytest-asyncio>=0.23.0",
+    "ruff>=0.4.0",
+]
 
-[build-system]
-requires = ["uv_build>=0.12.9,<0.13.0"]
-build-backend = "uv_build"
+[tool.uv]
+package = false
