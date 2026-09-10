@@ -7,7 +7,6 @@ Copilot Studio, Microsoft Teams ve MCP istemcilerine sunar.
 from typing import Any
 
 from fastmcp import FastMCP
-from starlette.middleware import Middleware
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.middleware.cors import CORSMiddleware
 from starlette.requests import Request
@@ -99,22 +98,15 @@ class PathNormalizer(BaseHTTPMiddleware):
 def create_asgi_app():
     """Tünel ve CORS uyumlu ASGI uygulamasını derler."""
     raw_app = mcp.http_app(transport="streamable-http")
-
-    middleware = [
-        Middleware(
-            CORSMiddleware,
-            allow_origins=["*"],
-            allow_credentials=True,
-            allow_methods=["*"],
-            allow_headers=["*"],
-        ),
-        Middleware(PathNormalizer),
-    ]
-
-    for m in reversed(middleware):
-        raw_app = m.cls(raw_app, **m.options)
-
-    return raw_app
+    app = PathNormalizer(raw_app)
+    app = CORSMiddleware(
+        app,
+        allow_origins=["*"],
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
+    return app
 
 
 if __name__ == "__main__":
