@@ -122,3 +122,27 @@ async def test_loopback_aff_c30_matches_itself():
     assert "AFF C30" in top_match.model_name
     assert top_match.overall_score == 100.0
     assert top_match.tier == "TAM_UYUM"
+
+
+@pytest.mark.asyncio
+async def test_loopback_aff_a50_matches_itself():
+    """AFF A50 için üretilen şartnamenin karşılaştırmada 1. sırada %100 AFF A50 çıkması testi."""
+    spec_svc = get_specification_service()
+    matcher_svc = get_matcher_service()
+
+    gen_res = await spec_svc.generate_specification(SpecRequest(model="AFF A50", flexibility="tekil"))
+    assert gen_res.audit_coverage_pct == 100.0
+    assert Path(gen_res.file_path).exists()
+
+    match_res = matcher_svc.match_specification(MatchRequest(
+        specification_file=gen_res.file_path,
+        top_n=5,
+        include_absurd_analysis=True,
+    ))
+
+    assert len(match_res) > 0
+    top_match = match_res[0]
+    assert "AFF A50" in top_match.model_name
+    assert top_match.overall_score == 100.0
+    assert top_match.tier == "TAM_UYUM"
+
