@@ -1,0 +1,51 @@
+[
+  {
+    "input_attributes": {
+      "model_name": "FAS2820",
+      "rack_units": "2",
+      "controller_count": 2,
+      "storage_tier": "FAS (Hibrit)",
+      "architecture": "Unified"
+    },
+    "output_clause": {
+      "category": "CHASSIS_PHYSICAL",
+      "title": "Şasi ve Kontrol Ünitesi Mimarisi",
+      "text": "Teklif edilen veri depolama sistemi (FAS2820) FAS (Hibrit) tipinde ve Unified mimarisine sahip olmalıdır. Sistem en fazla 2U kabin yüksekliğinde şasi yapısında olmalı ve kendi içerisinde aktif-aktif olarak çalışan, birbirini donanımsal arızalara karşı yedekleyen en az 2 (iki) adet kontrol ünitesine (HA Pair) sahip olacaktır."
+    }
+  },
+  {
+    "input_attributes": {
+      "processor_cores_per_node": 16,
+      "processor_cores_total": 32,
+      "processor_arch": "x86",
+      "controller_count": 2
+    },
+    "output_clause": {
+      "category": "COMPUTE",
+      "title": "İşlemci Mimarisi ve Çekirdek Sayısı",
+      "text": "Teklif edilen veri depolama sistemindeki her bir kontrol ünitesi üzerinde en az 16 (on altı) çekirdek olmak üzere, 2x16 = sistem toplamında en az 32 (otuz iki) fiziksel çekirdeğe sahip, x86 mimarisinde kurumsal işlemciler bulunmalıdır."
+    }
+  },
+  {
+    "input_attributes": {
+      "ram_per_node_gb": 64,
+      "ram_total_gb": 128,
+      "controller_count": 2
+    },
+    "output_clause": {
+      "category": "MEMORY",
+      "title": "Sistem Belleği (DRAM)",
+      "text": "Teklif edilen veri depolama sisteminde her bir kontrol ünitesi üzerinde en az 64 (altmış dört) GB sistem belleği olmak üzere, 2 kontrol ünitesi için 2x64 GB = sistem toplamında en az 128 (yüz yirmi sekiz) GB sistem belleği bulunacaktır. Bu bellek doğrudan DRAM tipinde olmalı ve SSD/Flash/NVMe temelli sanal bellek alanları bu kapsamda kabul edilmeyecektir."
+    }
+  },
+  {
+    "input_attributes": {
+      "scale_out_max_nodes": 24
+    },
+    "output_clause": {
+      "category": "HIGH_AVAILABILITY",
+      "title": "Yatayda Genişleme (Scale-Out)",
+      "text": "Teklif edilen veri depolama sistemi yatayda büyüme (scale-out) mimarisini desteklemeli ve en az 24 (yirmi dört) adet kontrol ünitesine kadar kümeleme desteği sunmalıdır."
+    }
+  }
+]

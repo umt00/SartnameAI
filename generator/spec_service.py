@@ -15,7 +15,7 @@ import re
 from datetime import datetime, timezone
 
 from generator.audit_verifier import SpecificationAuditVerifier
-from generator.clause_engine import ParametricClauseEngine
+from generator.ai_clause_engine import AIClauseEngine
 from generator.docx_builder import DocxSpecificationBuilder
 from generator.search_enricher import HybridSearchEnricher, get_search_enricher
 from shared.catalog_service import ExcelCatalogService
@@ -31,13 +31,13 @@ class SpecificationPipelineService:
     def __init__(
         self,
         catalog_service: ExcelCatalogService | None = None,
-        clause_engine: ParametricClauseEngine | None = None,
+        clause_engine: AIClauseEngine | None = None,
         docx_builder: DocxSpecificationBuilder | None = None,
         storage_service: LocalStorageService | None = None,
         search_enricher: HybridSearchEnricher | None = None,
     ):
         self.catalog = catalog_service or ExcelCatalogService()
-        self.engine = clause_engine or ParametricClauseEngine()
+        self.engine = clause_engine or AIClauseEngine()
         self.builder = docx_builder or DocxSpecificationBuilder()
         self.storage = storage_service or get_storage_service()
         self.enricher = search_enricher or get_search_enricher()
