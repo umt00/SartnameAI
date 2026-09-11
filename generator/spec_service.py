@@ -143,44 +143,10 @@ class SpecificationPipelineService:
             if is_valid and not missed:
                 break
 
-            # Test olumsuzsa -> Dinamik semantik sentez ile mükemmelleştir
-            clause_id = len(clauses) + 1
-            for missed_col in missed:
-                raw_val = spec.raw_attributes.get(missed_col)
-                if raw_val is None or UnitAndMultiplierParser.is_boolean_negative(raw_val):
-                    continue
-                cat = SemanticClassifier.classify(missed_col)
-                val_str = str(raw_val).strip()
-                if UnitAndMultiplierParser.is_boolean_positive(raw_val):
-                    text = (
-                        f"Teklif edilen veri depolama sistemi üzerinde yer alan '{missed_col}' "
-                        f"özelliği ve standardı donanım/yazılım kapsamında eksiksiz olarak desteklenecektir."
-                    )
-                else:
-                    clean_val = UnitAndMultiplierParser.clean_spec_text(val_str)
-                    text = (
-                        f"Teklif edilen veri depolama sistemi kurumsal teknik gereksinimler kapsamında "
-                        f"'{missed_col}' parametresini en az {clean_val} değerinde/standardında kesintisiz sağlayacaktır."
-                    )
-
-                clauses.append(
-                    Clause(
-                        id=clause_id,
-                        category=cat.value,
-                        title=f"{missed_col} Standardı",
-                        text=text,
-                        is_parametric=True,
-                        source_note=f"{spec.source_file}: Mükemmellik Denetimi Sentezi ({missed_col})",
-                    )
-                )
-                clause_id += 1
-
-            # Yeniden teste sok ve doğrula
-            is_valid, cov_pct, matched_cnt, total_cnt, missed = (
-                SpecificationAuditVerifier.audit(spec, clauses)
-            )
-            if is_valid and not missed:
-                break
+            # Test olumsuzsa bile LLM'in ürettiği maddeleri olduğu gibi kabul et.
+            # Eskiden eksik (missed) kolonları zorla ekleyen algoritma vardı, bunu kaldırdık.
+            # Denetim Skoru sadece metrik olarak kalacak.
+            break
 
         # ADIM 3: Testi yapılmış şartname dosyasını oluştur
         local_path = self.builder.build_docx(

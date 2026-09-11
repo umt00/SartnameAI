@@ -43,8 +43,9 @@ class AIClauseEngine:
             "4. Aggregate, FlexGroup, Constituent gibi sadece tek bir markaya (örneğin NetApp) özel teknolojilerin marka isimlerini kullanma; yerine 'Depolama Havuzu', 'Mantıksal Alan' gibi jenerik terimler kullan.\n"
             "5. Çok detaya giren spesifik kapasite limitlerini (örneğin 'en az 4,413,600 dosya', 'en az 16800 TiB ham kapasite') ilk aşamada verme, bunları daha esnek ve kurumsal ölçeği belirtecek şekilde jenerikleştir.\n"
             "6. Eğer bir özellik '0', 'Yok' veya null ise o konudan bahsetme.\n"
-            f"7. Şartname tonu: {'Kuruma ve ürüne özel' if request.flexibility == 'tekil' else 'Rekabete açık, jenerik'}.\n"
-            "8. Yanıtını SADECE aşağıdaki formattaki bir JSON nesnesi (object) olarak döndür:\n"
+            "7. Tüm teknik detayları birbiriyle ilişkili şekilde mantıksal olarak gruplandır ve TOPLAMDA ORTALAMA 25-30 ADET Doyurucu Şartname Maddesi oluştur. Çok parçalı (60-70 madde) bir yapı kurma; benzer konuları (örneğin işlemci, RAM, NVRAM) aynı maddede veya ardışık 2-3 maddede eriterek birleştir.\n"
+            f"8. Şartname tonu: {'Kuruma ve ürüne özel' if request.flexibility == 'tekil' else 'Rekabete açık, jenerik'}.\n"
+            "9. Yanıtını SADECE aşağıdaki formattaki bir JSON nesnesi (object) olarak döndür:\n"
             "{\n"
             "  \"clauses\": [\n"
             "    {\n"
@@ -81,8 +82,7 @@ class AIClauseEngine:
                     {"role": "system", "content": system_prompt},
                     {"role": "user", "content": user_prompt}
                 ],
-                response_format={ "type": "json_object" }, # Bazı modellerde json_object desteklenmeyebilir diziler için, bu yüzden role='system' da zorluyoruz
-                temperature=0.1 # Düşük sıcaklık, sıfır halüsinasyon
+                response_format={ "type": "json_object" } # Bazı modellerde json_object desteklenmeyebilir diziler için, bu yüzden role='system' da zorluyoruz
             )
             
             content = response.choices[0].message.content

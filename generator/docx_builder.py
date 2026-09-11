@@ -1,4 +1,4 @@
-"""Word Dokümanı (.docx) Üretim Servisi (SOLID: SRP & OCP).
+ """Word Dokümanı (.docx) Üretim Servisi (SOLID: SRP & OCP).
 
 Örnek şartname belgesinin (.docx) stillerini, başlık hiyerarşisini ve madde düzenini
 koruyarak yeni şartname dokümanı üretir.

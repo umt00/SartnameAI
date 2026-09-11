@@ -55,6 +55,7 @@ class Settings(BaseSettings):
     GENERATOR_PORT: int = 8002
     MATCHER_PORT: int = 8003
     DEBUG: bool = False
+    API_KEY: str = "sartnameai-secret-key-2026"
 
     @property
     def template_path(self) -> Path:

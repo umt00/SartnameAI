@@ -476,9 +476,12 @@ class ExcelCatalogService:
         """get_spec için kolaylık metodu."""
         return self.get_spec(model_query)
 
-    def get_available_models(self) -> list[str]:
+    def get_available_models(self, brand: str | None = None) -> list[str]:
         """Kayıtlı tüm model adlarının listesini döner."""
         self._ensure_indexed()
+        if brand:
+            brand_lower = brand.lower()
+            return [m.model_name for m in self._summaries if brand_lower in m.series.lower()]
         return [m.model_name for m in self._summaries]
 
     def get_all_specs(self) -> list[StorageSpec]:
