@@ -13,9 +13,11 @@ import contextlib
 import json
 import re
 from datetime import datetime, timezone
+from typing import Any
 
 from generator.audit_verifier import SpecificationAuditVerifier
 from generator.ai_clause_engine import AIClauseEngine
+from generator.clause_engine import ParametricClauseEngine
 from generator.docx_builder import DocxSpecificationBuilder
 from generator.search_enricher import HybridSearchEnricher, get_search_enricher
 from shared.catalog_service import ExcelCatalogService
@@ -31,17 +33,27 @@ class SpecificationPipelineService:
     def __init__(
         self,
         catalog_service: ExcelCatalogService | None = None,
-        clause_engine: AIClauseEngine | None = None,
+        clause_engine: Any | None = None,
         docx_builder: DocxSpecificationBuilder | None = None,
         storage_service: LocalStorageService | None = None,
         search_enricher: HybridSearchEnricher | None = None,
     ):
+        self.settings = get_settings()
         self.catalog = catalog_service or ExcelCatalogService()
-        self.engine = clause_engine or AIClauseEngine()
+
+        if clause_engine:
+            self.engine = clause_engine
+        elif self.settings.AZURE_OPENAI_API_KEY and self.settings.AZURE_OPENAI_ENDPOINT:
+            try:
+                self.engine = AIClauseEngine()
+            except Exception:
+                self.engine = ParametricClauseEngine()
+        else:
+            self.engine = ParametricClauseEngine()
+
         self.builder = docx_builder or DocxSpecificationBuilder()
         self.storage = storage_service or get_storage_service()
         self.enricher = search_enricher or get_search_enricher()
-        self.settings = get_settings()
 
     async def generate_specification(self, request: SpecRequest) -> GenerationResult:
         """Kullanıcı isteğinden uçtan uca şartname dokümanı ve maddeleri üretir."""

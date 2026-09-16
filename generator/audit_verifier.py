@@ -25,13 +25,47 @@ class SpecificationAuditVerifier:
         full_text = " ".join(c.text for c in clauses)
         raw = spec.raw_attributes or {}
 
+        # İhale şartnamesinde aranmaması gereken iç mimari, micro-limitler, firmware yaması ve çevre standartları kolonları
+        EXCLUDED_INTERNAL_COLUMNS = {
+            "model", "release date", "end of support (eos)", "1",
+            "min root volume size", "minimum os", "maximum os", "recommended version",
+            "operating temperature range", "operating relative humidity", "storage relative humidity",
+            "transit relative humidity", "operating altitude range", "storage altitude range",
+            "transit altitude range", "transit temperature range", "storage temperature range",
+            "acoustic noise - sound power", "acoustic noise - sound pressure",
+            "front clearance (cooling)", "front clearance (maintenance)",
+            "rear clearance (cooling)", "rear clearance (maintenance)",
+            "chassis height", "chassis width with mounting flanges",
+            "chassis width without mounting flanges", "chassis width",
+            "chassis depth with cable mgmt", "chassis depth without cable mgmt",
+            "weight", "weight (max)", "weight (min)", "bios", "bmc",
+            "input power voltage", "power supply",
+            "certifications emc/emi", "certifications safety",
+            "certifications safety/emc/emi/rohs", "certifications safety/emc/emi",
+            "standards emc/emi", "standards safety",
+            "acl (access list)", "intercluster lif", "high priority controller",
+            "high priority queue", "regular priority controller", "regular priority queue",
+            # Üreticiye özel mikro-limitler ve tablo başlıkları (kullanıcı direktifi ile jenerikleştirilen maddeler)
+            "aggregate", "bucket", "bytes", "cluster", "connection",
+            "flexgroup", "flexgroup constituent", "flexgroup volume", "flexgroup/node",
+            "ha pair", "ha pair (non-scalable)", "max fabricpool size",
+            "max flexgroup data constituent size", "max infinite volume data constituent size",
+            "netapp volume encryption", "node", "node/svm", "object store/storagevm",
+            "origin", "svm", "volume", "vserver", "file", "subsystem", "port",
+            "max disk pool volumes", "max disk pools", "max drives per disk pool",
+            "max vol size for a disk pool volume (tb)", "max partitions", "max volumes per partition",
+            "flash read cache (gb) (min/max)", "max destaging cache-to- flash size (gb)",
+            "full storage limit matrix", "pci interface", "oob management port interface (per controller)",
+        }
+
         eval_cols = [
             k
             for k, v in raw.items()
             if v is not None
             and str(v).strip() not in ["", "-", "N/A", "Not Supported", "None"]
             and not UnitAndMultiplierParser.is_boolean_negative(v)
-            and k.lower() not in ["model", "release date", "end of support (eos)", "1"]
+            and k.lower().strip() not in EXCLUDED_INTERNAL_COLUMNS
+            and not any(term in k.lower() for term in ["clearance", "certifications", "standards", "altitude"])
         ]
 
         found_count = 0

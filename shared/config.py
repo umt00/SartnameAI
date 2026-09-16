@@ -25,9 +25,10 @@ class Settings(BaseSettings):
     TEMPLATES_DIR: Path = DATA_DIR / "templates"
     OUTPUT_DIR: Path = PROJECT_ROOT / "output"
 
-    # Pipeline Dizinleri
-    PIPELINE_INCOMING_DIR: Path = PROJECT_ROOT / "pipeline" / "1_incoming_pdfs"
-    PIPELINE_PROCESSED_DIR: Path = PROJECT_ROOT / "pipeline" / "2_processed_pdfs"
+    # Pipeline Dizinleri (Kök Dizin İş Akışı)
+    PIPELINE_INCOMING_DIR: Path = PROJECT_ROOT / "1_incoming_pdfs"
+    PIPELINE_PROCESSED_DIR: Path = PROJECT_ROOT / "2_processed_pdfs"
+    NORMALIZED_EXCELS_DIR: Path = PROJECT_ROOT / "3_normalized_excels"
 
     DEFAULT_TEMPLATE_FILE: str = "NetAppTaslak-Ornek-Sartname-v02_FAS2820_Calix.docx"
 
@@ -71,6 +72,7 @@ def get_settings() -> Settings:
     settings.OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
     settings.PIPELINE_INCOMING_DIR.mkdir(parents=True, exist_ok=True)
     settings.PIPELINE_PROCESSED_DIR.mkdir(parents=True, exist_ok=True)
+    settings.NORMALIZED_EXCELS_DIR.mkdir(parents=True, exist_ok=True)
     settings.CATALOGS_DIR.mkdir(parents=True, exist_ok=True)
     settings.TEMPLATES_DIR.mkdir(parents=True, exist_ok=True)
     return settings

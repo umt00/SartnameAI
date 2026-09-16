@@ -93,4 +93,28 @@ class AdvisorEngine:
                 "protokolleri zorunlu tutulmuştur. Bu durum mimari çelişki içermektedir."
             )
 
+        # 5. Dahili İşletim Sistemi (Root Volume) Sızıntısı
+        if any(w in text_lower for w in ["root volume", "root alanı", "150 gib root", "150 gb root"]):
+            absurdities.append(
+                "Şartnamede 'root volume' / dahili işletim sistemi bölümü talep edilmiştir. "
+                "Root volume depolama kontrol ünitesi işletim sisteminin dahili bölümü olup, kurumun kullanılabilir veri "
+                "alanıyla ilgisi yoktur. Şartnamede açık bir üretici mimarisi sızıntısı (marka yönlendirmesi) teşkil eder."
+            )
+
+        # 6. Spesifik Firmware / Yama (Patch) Sürümü Dayatması
+        if re.search(r"(?:ontap|firmware|işletim sistemi|yazılım)\s*(?:sürümü)?\s*(?:en az\s*)?(?:9\.\d+|1[0-9]\.\d+|rc\d+|p\d+)", text_lower):
+            absurdities.append(
+                "Şartnamede belirli bir üreticiye ait spesifik ara firmware/yazılım sürüm kodu dayatılmıştır. "
+                "Şartnamelerde marka bağımsızlığı gereği 'üretici tarafından aktif olarak desteklenen güncel ve kararlı "
+                "kurumsal sürüm' talep edilmelidir; doğrudan sürüm numarası yazılması ihaleye itiraz sebebidir."
+            )
+
+        # 7. Yapay Mikro-Limit ve Bileşen Tuzakları (800 havuz, 1500 bileşen, 65.536 bağlantı)
+        if any(term in text_lower for term in ["800 adet depolama havuzu", "800 havuz", "1000 bileşen", "1500 bileşen", "65.536", "65536"]):
+            absurdities.append(
+                "Şartnamede tek bir üreticinin mimari sınırlarına karşılık gelen suni mikro-limitler (örn: 800 havuz, "
+                "1000/1500 bileşen veya 65.536 bağlantı) tespit edilmiştir. Bu talepler rekabeti kısıtlayıcı nitelikte olup "
+                "ihale komisyonuna zeyilname ile düzeltme talebi iletilmelidir."
+            )
+
         return absurdities

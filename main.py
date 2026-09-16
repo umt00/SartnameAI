@@ -50,9 +50,10 @@ def menu_pipeline():
     table.add_column("Adet", justify="right")
     table.add_column("Açıklama")
 
-    table.add_row("Bekleyen PDF'ler", str(status["pending_count"]), "1_incoming_pdfs klasöründeki dosyalar")
-    table.add_row("İşlenmiş PDF'ler", str(status["processed_count"]), "2_processed_pdfs arşivindeki dosyalar")
-    table.add_row("Aktif Kataloglar", str(status["catalog_excel_count"]), "data/catalogs altındaki Excel dosyaları")
+    table.add_row("Bekleyen PDF'ler", str(status["pending_count"]), "1_incoming_pdfs/ klasöründeki dosyalar")
+    table.add_row("İşlenmiş PDF'ler", str(status["processed_count"]), "2_processed_pdfs/ arşivindeki dosyalar")
+    table.add_row("Normalize Excel'ler", str(status.get("normalized_excel_count", status["catalog_excel_count"])), "3_normalized_excels/ altındaki tablolar")
+    table.add_row("Aktif Kataloglar", str(status["catalog_excel_count"]), "data/catalogs/ altındaki ana kaynaklar")
 
     console.print(table)
 
@@ -65,7 +66,7 @@ def menu_pipeline():
             if res.failed_count > 0:
                 console.print(f"[red]✗ {res.failed_count} dosya işlenirken hata oluştu: {res.failed_files}[/red]")
     else:
-        console.print("\n[dim]Bekleyen yeni PDF yok. PDF eklemek için: pipeline/1_incoming_pdfs/[/dim]")
+        console.print("\n[dim]Bekleyen yeni PDF yok. PDF eklemek için: 1_incoming_pdfs/[/dim]")
 
 
 def menu_generate_spec():

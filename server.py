@@ -238,7 +238,7 @@ def process_pending_pdfs() -> dict[str, Any]:
     return {
         "processed_count": result.processed_count,
         "failed_count": result.failed_count,
-        "errors": result.errors,
+        "failed_files": result.failed_files,
     }
 
 

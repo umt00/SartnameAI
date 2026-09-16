@@ -61,13 +61,13 @@ class ScoringEngine:
         if m_model:
             req.target_model = re.sub(r"\s+", "", m_model.group(1)).upper()
 
-        # 1. Depolama Ortamı (Tier) — Önce Hibrit kontrolü (içinde NVMe SSD geçse bile)
-        if "hibrit" in text_lower or "hybrid" in text_lower:
-            req.storage_tier = "Hibrit"
-        elif any(t in text_lower for t in ["all-flash", "all flash", "yalnızca ssd"]):
+        # 1. Depolama Ortamı (Tier) — Açıkça All-Flash/tamamen flash belirtilmişse All-Flash olarak kabul et
+        if any(t in text_lower for t in ["all-flash", "all flash", "tamamen flash", "yalnızca ssd", "yalnızca flash"]):
             req.storage_tier = "All-Flash"
         elif any(t in text_lower for t in ["all-san", "yalnızca san"]):
             req.storage_tier = "All-SAN"
+        elif "hibrit" in text_lower or "hybrid" in text_lower:
+            req.storage_tier = "Hibrit"
 
         # 2. Kontrol Ünitesi (Şasi / Temel Sistem - scale-out hariç)
         m_ctrl = re.search(
@@ -114,18 +114,25 @@ class ScoringEngine:
         if m_nv:
             req.min_nvram_total_gb = float(m_nv.group(1))
 
-        # 5. Disk Sürücü Sayısı (Çift yönlü arama: "144 disk" veya "disk ... azami 144")
-        m_d1 = re.findall(
-            r"(?:azami|en az)\s*(\d+)\s*(?:\([^)]+\)\s*)?(?:[^\n\.,;]*?)(?:disk|sürücü)",
+        # 5. Disk Sürücü Sayısı (Öncelik: toplam sistem sürücü kapasitesi)
+        m_total_drives = re.search(
+            r"toplamda\s*(?:en az)?\s*(\d+)\s*(?:\([^)]+\)\s*)?(?:adet)?\s*(?:disk|sürücü)",
             text_lower,
         )
-        m_d2 = re.findall(
-            r"(?:disk|sürücü)[^\n\.,;]*?(?:azami|en az)\s*(\d+)",
-            text_lower,
-        )
-        valid_drives = [int(x) for x in m_d1 + m_d2 if 12 <= int(x) <= 2000]
-        if valid_drives:
-            req.min_drives = max(valid_drives)
+        if m_total_drives:
+            req.min_drives = int(m_total_drives.group(1))
+        else:
+            m_d1 = re.findall(
+                r"(?:azami|en az)\s*(\d+)\s*(?:\([^)]+\)\s*)?(?:[^\n\.,;]*?)(?:disk|sürücü)",
+                text_lower,
+            )
+            m_d2 = re.findall(
+                r"(?:disk|sürücü)[^\n\.,;]*?(?:azami|en az)\s*(\d+)",
+                text_lower,
+            )
+            valid_drives = [int(x) for x in m_d1 + m_d2 if 12 <= int(x) <= 2000]
+            if valid_drives:
+                req.min_drives = max(valid_drives)
 
         # 6. Ağ ve Portlar
         m_ip = re.search(

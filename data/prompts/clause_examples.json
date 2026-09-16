@@ -1,51 +1,84 @@
 [
   {
     "input_attributes": {
-      "model_name": "FAS2820",
+      "model_name": "AFF A30",
       "rack_units": "2",
       "controller_count": 2,
-      "storage_tier": "FAS (Hibrit)",
+      "storage_tier": "AFF (Tüm Flash)",
       "architecture": "Unified"
     },
     "output_clause": {
       "category": "CHASSIS_PHYSICAL",
       "title": "Şasi ve Kontrol Ünitesi Mimarisi",
-      "text": "Teklif edilen veri depolama sistemi (FAS2820) FAS (Hibrit) tipinde ve Unified mimarisine sahip olmalıdır. Sistem en fazla 2U kabin yüksekliğinde şasi yapısında olmalı ve kendi içerisinde aktif-aktif olarak çalışan, birbirini donanımsal arızalara karşı yedekleyen en az 2 (iki) adet kontrol ünitesine (HA Pair) sahip olacaktır."
+      "text": "Teklif edilen veri depolama sistemi kurumsal Tüm Flash (All-Flash) yapısında olmalı ve blok ile dosya (Unified) protokollerini ek bir ağ geçidi veya harici donanım gerektirmeksizin aynı kontrol üniteleri üzerinden yerel olarak sunabilmelidir. Sistem en fazla 2U kabin yüksekliğinde şasi yapısında olmalı ve kendi içerisinde aktif-aktif çalışan en az 2 (iki) adet kontrol ünitesine (HA Pair) sahip olmalıdır."
     }
   },
   {
     "input_attributes": {
-      "processor_cores_per_node": 16,
-      "processor_cores_total": 32,
-      "processor_arch": "x86",
-      "controller_count": 2
+      "shelves_supported": "NS224 (NVMe), DS224C (SAS SSD)",
+      "max_shelves": 5
     },
     "output_clause": {
-      "category": "COMPUTE",
-      "title": "İşlemci Mimarisi ve Çekirdek Sayısı",
-      "text": "Teklif edilen veri depolama sistemindeki her bir kontrol ünitesi üzerinde en az 16 (on altı) çekirdek olmak üzere, 2x16 = sistem toplamında en az 32 (otuz iki) fiziksel çekirdeğe sahip, x86 mimarisinde kurumsal işlemciler bulunmalıdır."
+      "category": "STORAGE_MEDIA",
+      "title": "Harici Disk Rafları ve Sürücü Genişlemesi",
+      "text": "Teklif edilen sistem, farklı SSD ve/veya NVMe SSD raf seçenekleriyle harici kapasite genişlemesini desteklemeli; yapılandırmaya bağlı olarak toplamda en az 5 (beş) adet harici disk rafının sisteme eklenebilmesine imkân vermelidir."
     }
   },
   {
     "input_attributes": {
-      "ram_per_node_gb": 64,
-      "ram_total_gb": 128,
-      "controller_count": 2
+      "max_raw_capacity_tb": 4413.6,
+      "storage_tier": "All-Flash"
     },
     "output_clause": {
-      "category": "MEMORY",
-      "title": "Sistem Belleği (DRAM)",
-      "text": "Teklif edilen veri depolama sisteminde her bir kontrol ünitesi üzerinde en az 64 (altmış dört) GB sistem belleği olmak üzere, 2 kontrol ünitesi için 2x64 GB = sistem toplamında en az 128 (yüz yirmi sekiz) GB sistem belleği bulunacaktır. Bu bellek doğrudan DRAM tipinde olmalı ve SSD/Flash/NVMe temelli sanal bellek alanları bu kapsamda kabul edilmeyecektir."
+      "category": "STORAGE_MEDIA",
+      "title": "Ham Kapasite Genişleme Sınırları",
+      "text": "Sistem, tamamen flash yapılandırmada en az 4 PB ham kapasiteyi destekleyebilecek şekilde genişleyebilmelidir."
     }
   },
   {
     "input_attributes": {
-      "scale_out_max_nodes": 24
+      "deduplication": true,
+      "compression": true,
+      "compaction": true,
+      "efficiency_guarantee_ratio": "4:1"
+    },
+    "output_clause": {
+      "category": "STORAGE_MEDIA",
+      "title": "Veri Verimliliği Garantisi ve Telafi Taahhüdü",
+      "text": "Sistem üzerinde satıriçi (in-line) veri tekilleştirme, satıriçi sıkıştırma (compression) ve satıriçi kompaktlama (compaction) özellikleri aktif olarak çalışmalıdır. Üretici, kurumsal veri iş yükleri için en az 4:1 oranında efektif veri verimliliği garantisi vermeli; bu oranın karşılanamaması halinde doğacak kapasite açığını ek disk ve gerekirse raf donanımını kuruma ücretsiz sağlayarak telafi edeceğini resmi üretici mektubu ile taahhüt etmelidir."
+    }
+  },
+  {
+    "input_attributes": {
+      "scale_out_max_nodes_nas": 24,
+      "scale_out_max_nodes_san": 12
     },
     "output_clause": {
       "category": "HIGH_AVAILABILITY",
-      "title": "Yatayda Genişleme (Scale-Out)",
-      "text": "Teklif edilen veri depolama sistemi yatayda büyüme (scale-out) mimarisini desteklemeli ve en az 24 (yirmi dört) adet kontrol ünitesine kadar kümeleme desteği sunmalıdır."
+      "title": "Yatayda Büyüme (Scale-Out) Mimarisi",
+      "text": "Teklif edilen sistem yatayda büyüme (scale-out) mimarisini desteklemelidir. Sistem, dosya (NAS) protokolleri için en az 24 (yirmi dört) adet, blok (SAN) protokolleri için ise en az 12 (on iki) adet kontrol ünitesine (node) kadar kesintisiz genişleyebilmeli ve tek bir küme (cluster) altında yönetilebilmelidir."
+    }
+  },
+  {
+    "input_attributes": {
+      "encryption_at_rest": true,
+      "fips_compliance": "FIPS 140-2"
+    },
+    "output_clause": {
+      "category": "SECURITY",
+      "title": "Durağan Veri Güvenliği ve Şifreleme (Data-at-Rest Encryption)",
+      "text": "Teklif edilen depolama sistemi üzerinde saklanan verilerin güvenliği için durağan veri şifreleme (Data-at-Rest Encryption) desteği bulunmalı, FIPS 140-2 Seviye 1/2 standartlarında dahili veya harici anahtar yönetim sunucuları (KMIP) ile şifreleme anahtarları yönetilebilmelidir."
+    }
+  },
+  {
+    "input_attributes": {
+      "os_version": "9.19.1",
+      "os_name": "ONTAP"
+    },
+    "output_clause": {
+      "category": "SYSTEM_SOFTWARE",
+      "title": "Sistem İşletim Sistemi ve Sürüm Desteği",
+      "text": "Teklif edilen depolama sistemi, üreticinin donanım mimarisine özel optimize edilmiş, en yüksek güvenlik ve kararlılık seviyesine sahip, üretici tarafından aktif olarak desteklenen güncel kurumsal işletim sistemi sürümü ile teslim edilmelidir."
     }
   }
 ]

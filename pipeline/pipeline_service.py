@@ -36,16 +36,19 @@ class PipelineService:
         incoming_dir: Path | None = None,
         processed_dir: Path | None = None,
         catalogs_dir: Path | None = None,
+        normalized_dir: Path | None = None,
     ):
         settings = get_settings()
         self.incoming_dir = incoming_dir or settings.PIPELINE_INCOMING_DIR
         self.processed_dir = processed_dir or settings.PIPELINE_PROCESSED_DIR
         self.catalogs_dir = catalogs_dir or settings.CATALOGS_DIR
+        self.normalized_dir = normalized_dir or settings.NORMALIZED_EXCELS_DIR
 
         # Dizinlerin varlığını garantiye al
         self.incoming_dir.mkdir(parents=True, exist_ok=True)
         self.processed_dir.mkdir(parents=True, exist_ok=True)
         self.catalogs_dir.mkdir(parents=True, exist_ok=True)
+        self.normalized_dir.mkdir(parents=True, exist_ok=True)
 
     @staticmethod
     def normalize_value(val: Any) -> str:
@@ -130,8 +133,11 @@ class PipelineService:
         out_filename = f"{base_name}_excel.xlsx"
         catalog_out_path = self.catalogs_dir / out_filename
 
-        # Excel'i doğrudan data/catalogs altına kaydet
+        # Excel'i data/catalogs ve 3_normalized_excels altına kaydet
         pivot_df.to_excel(catalog_out_path, index=False)
+        if self.normalized_dir:
+            norm_out_path = self.normalized_dir / out_filename
+            pivot_df.to_excel(norm_out_path, index=False)
 
         # PDF'i işlenmişler arşivine taşı
         processed_pdf_path = self.processed_dir / pdf_path.name
@@ -175,15 +181,19 @@ class PipelineService:
         pending = [f.name for f in self.incoming_dir.glob("*.pdf")]
         processed = [f.name for f in self.processed_dir.glob("*.pdf")]
         catalogs = [f.name for f in self.catalogs_dir.glob("*.xlsx")]
+        normalized = [f.name for f in self.normalized_dir.glob("*.xlsx")] if self.normalized_dir else []
 
         return {
             "incoming_dir": str(self.incoming_dir),
             "processed_dir": str(self.processed_dir),
             "catalogs_dir": str(self.catalogs_dir),
+            "normalized_dir": str(self.normalized_dir) if self.normalized_dir else "",
             "pending_count": len(pending),
             "processed_count": len(processed),
             "catalog_excel_count": len(catalogs),
+            "normalized_excel_count": len(normalized),
             "pending_files": pending,
             "processed_files": processed,
             "catalog_files": catalogs,
+            "normalized_files": normalized,
         }

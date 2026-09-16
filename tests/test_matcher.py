@@ -68,3 +68,20 @@ def test_scoring_engine_parser():
     assert req.min_controllers == 2
     assert req.min_ram_total_gb == 256
     assert req.max_rack_units == 2
+
+
+def test_tender_leak_detection():
+    """Şartnamedeki dahili root volume, firmware yama kodları ve suni mikro-limitlerin tespit edildiğini test eder."""
+    leaky_tender = (
+        "Teklif edilen depolama sistemi üzerinde en az 150 GiB root volume alanı ayrılmış olmalı, "
+        "işletim sistemi sürümü en az 9.19.1 olmalıdır. Ayrıca sistemde en az 800 adet depolama havuzu "
+        "ve 65.536 eşzamanlı bağlantı desteklenmelidir."
+    )
+
+    absurdities = AdvisorEngine.detect_tender_absurdities(leaky_tender)
+    assert len(absurdities) >= 3, f"En az 3 sızıntı/tuzak tespit edilmeliydi: {absurdities}"
+    full_str = " ".join(absurdities)
+    assert "root volume" in full_str.lower()
+    assert "firmware" in full_str.lower() or "sürüm" in full_str.lower()
+    assert "mikro-limit" in full_str.lower() or "havuz" in full_str.lower()
+

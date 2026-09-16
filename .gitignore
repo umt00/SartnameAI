@@ -33,8 +33,6 @@ Thumbs.db
 output/*
 !output/.gitkeep
 
-# Pipeline temporary folders
-pipeline/1_incoming_pdfs/*
-!pipeline/1_incoming_pdfs/.gitkeep
-pipeline/2_processed_pdfs/*
-!pipeline/2_processed_pdfs/.gitkeep
+# Pipeline incoming folder (keep directory via .gitkeep)
+1_incoming_pdfs/*
+!1_incoming_pdfs/.gitkeep
