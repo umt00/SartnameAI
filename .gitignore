@@ -29,6 +29,12 @@ htmlcov/
 .DS_Store
 Thumbs.db
 
+# IDE & Editors
+.vscode/
+.idea/
+*.swp
+*.swo
+
 # Output directory generated files (keep directory via .gitkeep)
 output/*
 !output/.gitkeep

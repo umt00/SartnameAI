@@ -1,5 +1,10 @@
 # SartnameAI — Kurumsal Teknik Şartname & Karşılaştırma Asistanı
 
+[![Python Version](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Code Style: Ruff](https://img.shields.io/badge/code%20style-ruff-000000.svg)](https://github.com/astral-sh/ruff)
+[![Tests](https://img.shields.io/badge/tests-25%20passed-brightgreen.svg)]()
+
 SartnameAI; kurumsal veri depolama sistemleri için **ETL Veri Pipeline'ı**, **1:1 Doğrulamalı Şartname Üretimi** ve **Akıllı Şartname Karşılaştırma** işlevlerini bir araya getiren, bağımsız FastMCP sunucuları üzerinden **Microsoft Teams**, **Copilot Studio** ve **Azure** ortamlarına entegre olabilen 3 katmanlı yapay zekâ asistanıdır.
 
 ---
@@ -152,7 +157,15 @@ Kontrol paneli üzerinden tek tuşla:
 
 ## 🔌 FastMCP Sunucularını Çalıştırma
 
-Her modül bağımsız bir FastMCP sunucusu olarak çalışır:
+### Birleşik (Unified) FastMCP Sunucusu (Önerilen)
+Tüm servisleri (Pipeline, Generator, Matcher) tek bir FastMCP sunucusunda toplayarak Copilot Studio, Teams veya Claude/Cursor entegrasyonu sunar:
+
+```bash
+uv run python server.py
+```
+
+### Bağımsız Modül Sunucuları
+İstenirse her modül bağımsız bir FastMCP sunucusu olarak da çalıştırılabilir:
 
 ```bash
 # Modül 1: Pipeline MCP (:8001)
@@ -166,7 +179,7 @@ uv run python matcher/mcp_server.py
 ```
 
 ### Copilot Studio ve Teams Entegrasyonu
-Sunucular dahili **CORS Middleware** ve **PathNormalizer** içerir. Cloudflare tüneli (`cloudflared`) veya Azure App Service üzerinden doğrudan Copilot Studio'ya bağlanabilir.
+Sunucular dahili **CORS Middleware** ve **PathNormalizer** içerir. Azure Container Apps, Cloudflare tüneli (`cloudflared`) veya Azure App Service üzerinden doğrudan Copilot Studio ve Teams'e bağlanabilir.
 
 ---
 
@@ -181,5 +194,6 @@ uv run pytest tests/ -v
 ---
 
 ## 📄 Lisans ve İletişim
+- **Lisans:** Bu proje [MIT Lisansı](LICENSE) altında lisanslanmıştır.
 - **Geliştirici:** Umut Arslan (umtarsln00@icloud.com)
 - **Repo:** [https://github.com/umt00/SartnameAI](https://github.com/umt00/SartnameAI)

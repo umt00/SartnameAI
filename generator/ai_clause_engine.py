@@ -1,6 +1,4 @@
 import json
-from pathlib import Path
-from typing import List
 
 from openai import AzureOpenAI
 
@@ -13,10 +11,10 @@ class AIClauseEngine:
 
     def __init__(self):
         self.settings = get_settings()
-        
+
         if not self.settings.AZURE_OPENAI_API_KEY or not self.settings.AZURE_OPENAI_ENDPOINT:
             raise ValueError("Azure OpenAI yapılandırması eksik. (Endpoint veya API Key)")
-            
+
         self.client = AzureOpenAI(
             api_key=self.settings.AZURE_OPENAI_API_KEY,
             api_version=self.settings.AZURE_OPENAI_API_VERSION,
@@ -74,22 +72,22 @@ class AIClauseEngine:
             "}\n\n"
             "ÖRNEKLER:\n"
         )
-        
+
         for ex in self.examples:
             base_prompt += f"Girdi Özellikleri:\n{json.dumps(ex['input_attributes'], ensure_ascii=False, indent=2)}\n"
             base_prompt += f"Çıktı Madde:\n{json.dumps(ex['output_clause'], ensure_ascii=False, indent=2)}\n\n"
-            
+
         return base_prompt
 
-    def generate_clauses(self, spec: StorageSpec, request: SpecRequest) -> List[Clause]:
+    def generate_clauses(self, spec: StorageSpec, request: SpecRequest) -> list[Clause]:
         """Excel verilerini AI'ye gönderip Clauses üretir."""
-        
+
         system_prompt = self._build_system_prompt(request)
-        
+
         # Filtrele ve temizle (sadece anlamlı olan verileri gönder ki token tasarrufu olsun)
         clean_spec = spec.model_dump(exclude_none=True, exclude_defaults=True)
         # raw_attributes içindeki gereksiz/boş olanları da silebiliriz ama şimdilik doğrudan yollayalım
-        
+
         user_prompt = f"Lütfen aşağıdaki teknik özellikler tablosundan şartname maddelerini JSON dizisi olarak üret:\n\n{json.dumps(clean_spec, ensure_ascii=False, indent=2)}"
 
         try:
@@ -101,7 +99,7 @@ class AIClauseEngine:
                 ],
                 response_format={ "type": "json_object" } # Bazı modellerde json_object desteklenmeyebilir diziler için, bu yüzden role='system' da zorluyoruz
             )
-            
+
             content = response.choices[0].message.content
             # Eger json_object dict dönmeye zorlarsa, sarmalanmış olabilir. Biz düz string olarak parse edelim.
             # Azure OpenAI json_object kullanırken kök elemanın Object olmasını bekleyebilir.
@@ -110,14 +108,14 @@ class AIClauseEngine:
         except Exception as e:
             print(f"Azure OpenAI Error: {e}")
             return []
-        
+
         # Parse ve Clause objelerine dönüştür
         clauses = []
         clause_id = 1
         try:
             data = json.loads(content)
             items = data.get("clauses", data) if isinstance(data, dict) else data
-            
+
             if isinstance(items, list):
                 for item in items:
                     clauses.append(
@@ -133,5 +131,5 @@ class AIClauseEngine:
                     clause_id += 1
         except json.JSONDecodeError:
             print("AI yanıtı parse edilemedi.")
-            
+
         return clauses

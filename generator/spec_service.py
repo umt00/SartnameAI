@@ -15,15 +15,14 @@ import re
 from datetime import datetime, timezone
 from typing import Any
 
-from generator.audit_verifier import SpecificationAuditVerifier
 from generator.ai_clause_engine import AIClauseEngine
+from generator.audit_verifier import SpecificationAuditVerifier
 from generator.clause_engine import ParametricClauseEngine
 from generator.docx_builder import DocxSpecificationBuilder
 from generator.search_enricher import HybridSearchEnricher, get_search_enricher
 from shared.catalog_service import ExcelCatalogService
 from shared.config import get_settings
 from shared.models import Clause, GenerationResult, SpecRequest, StorageSpec
-from shared.semantic_parser import SemanticClassifier, UnitAndMultiplierParser
 from shared.storage_service import LocalStorageService, get_storage_service
 
 

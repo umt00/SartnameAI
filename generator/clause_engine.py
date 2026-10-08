@@ -48,7 +48,7 @@ class ParametricClauseEngine:
     def _calc_max_shelf_count(self, spec: StorageSpec) -> int:
         """Desteklenen harici disk rafı tavanını hesaplar."""
         counts = []
-        for name, cnt in spec.shelves_supported.items():
+        for cnt in spec.shelves_supported.values():
             m = re.findall(r"\d+", str(cnt))
             if m:
                 counts.extend(int(x) for x in m)
